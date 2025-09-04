@@ -10,6 +10,36 @@ st.title("📊 Calculadora de Dividendos + Planilha Automatizada")
 if "acoes" not in st.session_state:
     st.session_state.acoes = []
 
+# 1️⃣ Leitor de arquivo
+st.subheader("📂 Importar Ações de Arquivo")
+arquivo = st.file_uploader("Escolha um arquivo CSV ou Excel", type=["csv", "xlsx"])
+if arquivo:
+    try:
+        if arquivo.name.endswith(".csv"):
+            df_arquivo = pd.read_csv(arquivo)
+        else:
+            df_arquivo = pd.read_excel(arquivo)
+        
+        # Espera colunas: NOME, Valor Por Unidade, Quantidade, Rendimento por Unidade
+        for _, row in df_arquivo.iterrows():
+            nome = str(row["NOME"]).upper()
+            existe = next((acao for acao in st.session_state.acoes if acao["NOME"] == nome), None)
+            if existe:
+                existe["Valor Por Unidade"] = row["Valor Por Unidade"]
+                existe["Quantidade"] = row["Quantidade"]
+                existe["Rendimento por Unidade"] = row["Rendimento por Unidade"]
+            else:
+                st.session_state.acoes.append({
+                    "NOME": nome,
+                    "Valor Por Unidade": row["Valor Por Unidade"],
+                    "Quantidade": row["Quantidade"],
+                    "Rendimento por Unidade": row["Rendimento por Unidade"]
+                })
+        st.success("Arquivo importado com sucesso!")
+    except Exception as e:
+        st.error(f"Erro ao ler o arquivo: {e}")
+
+# 2️⃣ Formulário para adicionar/atualizar ação
 st.subheader("➕ Adicionar Ação/Cota")
 with st.form("form_acao"):
     nome = st.text_input("Nome da ação/cota:")
@@ -20,16 +50,13 @@ with st.form("form_acao"):
 
     if adicionar and nome:
         nome = nome.upper()
-        # Verifica se já existe
         existe = next((acao for acao in st.session_state.acoes if acao["NOME"] == nome), None)
         if existe:
-            # Atualiza os valores
             existe["Valor Por Unidade"] = preco_acao
             existe["Quantidade"] = quantidade
             existe["Rendimento por Unidade"] = dividendo
             st.success(f"Ação {nome} atualizada!")
         else:
-            # Adiciona nova
             st.session_state.acoes.append({
                 "NOME": nome,
                 "Valor Por Unidade": preco_acao,
@@ -38,10 +65,18 @@ with st.form("form_acao"):
             })
             st.success(f"Ação {nome} adicionada!")
 
+# 3️⃣ Excluir ação específica
+if st.session_state.acoes:
+    st.subheader("❌ Remover Ação")
+    nomes_acoes = [acao["NOME"] for acao in st.session_state.acoes]
+    acao_remover = st.selectbox("Selecione a ação para remover:", [""] + nomes_acoes)
+    if st.button("Remover Ação") and acao_remover:
+        st.session_state.acoes = [acao for acao in st.session_state.acoes if acao["NOME"] != acao_remover]
+        st.success(f"Ação {acao_remover} removida!")
+
+# Mostrar tabela e cálculos
 if st.session_state.acoes:
     df = pd.DataFrame(st.session_state.acoes)
-
-    # Cálculos
     df["Quantidade Total (R$)"] = df["Valor Por Unidade"] * df["Quantidade"]
     df["Expectativa de Recebimentos (R$)"] = df["Rendimento por Unidade"] * df["Quantidade"]
     df["Magic Number (Qtd. Necessária)"] = df.apply(
@@ -49,7 +84,6 @@ if st.session_state.acoes:
         if row["Rendimento por Unidade"] > 0 else 0, axis=1
     )
 
-    # Totais gerais
     total_investido = df["Quantidade Total (R$)"].sum()
     total_recebimentos = df["Expectativa de Recebimentos (R$)"].sum()
 
@@ -60,7 +94,6 @@ if st.session_state.acoes:
     st.write(f"💰 **Investimento Total:** R$ {total_investido:,.2f}")
     st.write(f"📈 **Expectativa Total de Recebimentos:** R$ {total_recebimentos:,.2f}")
 
-    # Gráfico
     st.bar_chart({
         "Totais (R$)": {
             "Investimento Total": total_investido,
@@ -68,11 +101,9 @@ if st.session_state.acoes:
         }
     })
 
-    # Gerar planilha para download
     output = BytesIO()
     df.to_excel(output, index=False)
     output.seek(0)
-
     st.download_button(
         label="📥 Baixar Planilha Excel",
         data=output,
