@@ -4,7 +4,27 @@ from io import BytesIO
 
 
 st.set_page_config(page_title="Carteira de Investimentos", layout="centered")
-tema_escuro = st.toggle("🌙 Modo Escuro", value=False)
+
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+
+# Função para alternar tema
+def toggle_theme():
+    st.session_state.dark_mode = not st.session_state.dark_mode
+    # Muda o tema via JS
+    js_code = f"""
+    const theme = window.parent.document.querySelector('body');
+    if ({str(st.session_state.dark_mode).lower()}) {{
+        theme.setAttribute('data-baseweb-theme', 'dark');
+    }} else {{
+        theme.setAttribute('data-baseweb-theme', 'light');
+    }}
+    """
+    st.components.v1.html(f"<script>{js_code}</script>")
+
+    st.toggle("🌙 Modo Escuro", value=st.session_state.dark_mode, key="toggle", on_change=toggle_theme)
+
+
 
 st.title("📊 Calculadora de Investimentos")
 
@@ -396,197 +416,6 @@ if st.session_state.acoes or st.session_state.renda_fixa or st.session_state.cri
 
 
     )
-
-# ==============================
-# 🎨 Toggle de Tema
-# ==============================
-#tema_escuro = st.toggle("🌙 Modo Escuro", value=False)
-
-if tema_escuro:
-    # 🌙 CSS Dark Refinado
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            background-color: #0f172a;
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
-            color: #f8fafc !important;
-        }
-        h1, h2, h3, h4, h5, h6, label, p, span, div {
-            color: #f8fafc !important;
-        }
-
-        /* Botões principais */
-        .stButton button {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            color: white !important;
-            border-radius: 14px;
-            padding: 10px 22px;
-            border: none;
-            font-weight: 500;
-            box-shadow: 0 4px 10px rgba(79,70,229,0.25);
-            transition: all 0.3s ease;
-            transform: translateY(0);
-        }
-        .stButton button:hover {
-            background: linear-gradient(135deg, #4f46e5, #312e81);
-            box-shadow: 0 6px 14px rgba(79,70,229,0.4);
-            transform: translateY(-2px);
-        }
-        .stButton button:disabled {
-            background: #334155 !important;
-            color: #94a3b8 !important;
-            opacity: 0.7;
-            box-shadow: none;
-            transform: none;
-        }
-
-        /* Download button */
-        .stDownloadButton > button {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white !important;
-            border-radius: 14px;
-            border: none;
-            padding: 10px 22px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(16,185,129,0.25);
-            transition: all 0.3s ease;
-            transform: translateY(0);
-        }
-        .stDownloadButton > button:hover {
-            background: linear-gradient(135deg, #059669, #047857);
-            box-shadow: 0 6px 16px rgba(16,185,129,0.4);
-            transform: translateY(-2px);
-        }
-        .stDownloadButton > button:disabled {
-            background: #334155 !important;
-            color: #94a3b8 !important;
-            opacity: 0.7;
-            box-shadow: none;
-        }
-
-        /* Inputs */
-        .stTextInput > div > div > input,
-        .stNumberInput input,
-        .stSelectbox div[data-baseweb="select"] {
-            border-radius: 10px;
-            border: 1px solid #334155;
-            padding: 8px;
-            background-color: #1e293b;
-            color: #f8fafc !important;
-            transition: all 0.2s ease;
-        }
-        .stTextInput > div > div > input:focus,
-        .stNumberInput input:focus,
-        .stSelectbox div[data-baseweb="select"]:focus {
-            border: 1px solid #6366f1;
-            box-shadow: 0 0 6px rgba(99,102,241,0.6);
-        }
-
-        /* Uploader */
-        .stFileUploader {
-            background: #1e293b !important;
-            border-radius: 14px;
-            padding: 14px;
-            border: 2px dashed #475569;
-            color: #f1f5f9 !important;
-            transition: border 0.3s ease;
-        }
-        .stFileUploader div, .stFileUploader label {
-            color: #f1f5f9 !important;
-        }
-        .stFileUploader:hover {
-            border: 2px dashed #6366f1;
-        }
-
-        /* Tabs */
-        .stTabs [data-baseweb="tab"] {
-            background-color: #1e293b;
-            border-radius: 12px 12px 0 0;
-            color: #e2e8f0;
-            transition: all 0.2s ease;
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: #6366f1 !important;
-            color: white !important;
-        }
-
-        /* Containers */
-        .stForm, .stDataFrame {
-            background: #1e293b;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.5);
-            color: #f8fafc;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # 📊 Tema escuro para gráficos
-    import matplotlib.pyplot as plt
-    plt.style.use("dark_background")
-
-else:
-    # ☀️ CSS Claro
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            background-color: #f8fafc;
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
-            color: #1e293b;
-        }
-        h1, h2, h3 {
-            color: #0f172a;
-            font-weight: 600;
-        }
-
-        /* Botões */
-        .stButton button {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white !important;
-            border-radius: 14px;
-            padding: 10px 22px;
-            border: none;
-            font-weight: 500;
-            box-shadow: 0 4px 10px rgba(37,99,235,0.25);
-            transition: all 0.3s ease;
-            transform: translateY(0);
-        }
-        .stButton button:hover {
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-            box-shadow: 0 6px 16px rgba(37,99,235,0.35);
-            transform: translateY(-2px);
-        }
-
-        /* Containers */
-        .stForm, .stDataFrame {
-            background: #ffffff;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
-        }
-
-        /* Tabs */
-        .stTabs [data-baseweb="tab"] {
-            background-color: #e2e8f0;
-            border-radius: 12px 12px 0 0;
-            transition: all 0.2s ease;
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: #3b82f6 !important;
-            color: white !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # 📊 Tema claro para gráficos
-    import matplotlib.pyplot as plt
-    plt.style.use("default")
 
 
 # Rodapé
