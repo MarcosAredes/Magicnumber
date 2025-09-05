@@ -4,6 +4,7 @@ from io import BytesIO
 
 
 st.set_page_config(page_title="Carteira de Investimentos", layout="centered")
+tema_escuro = st.toggle("🌙 Modo Escuro", value=False)
 
 st.title("📊 Calculadora de Investimentos")
 
@@ -399,7 +400,7 @@ if st.session_state.acoes or st.session_state.renda_fixa or st.session_state.cri
 # ==============================
 # 🎨 Toggle de Tema
 # ==============================
-tema_escuro = st.toggle("🌙 Modo Escuro", value=False)
+#tema_escuro = st.toggle("🌙 Modo Escuro", value=False)
 
 if tema_escuro:
     # 🌙 CSS Dark Refinado
@@ -598,4 +599,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
