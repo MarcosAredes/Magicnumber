@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
+
 st.set_page_config(page_title="Carteira de Investimentos", layout="centered")
 
 st.title("📊 Calculadora de Investimentos")
@@ -72,6 +73,8 @@ with aba1:
         dividendo = st.number_input("Rendimento por unidade (R$):", min_value=0.00, step=0.01, format="%.2f")
         add = st.form_submit_button("Adicionar / Atualizar")
 
+
+
         if add and nome:
             nome = nome.upper()
             existe = next((acao for acao in st.session_state.acoes if acao["NOME"] == nome), None)
@@ -88,6 +91,11 @@ with aba1:
                     "Rendimento por Unidade": dividendo
                 })
                 st.success(f"Ação {nome} adicionada!")
+
+    if st.session_state.acoes:
+        df_acoes = pd.DataFrame(st.session_state.acoes)
+        df_acoes["Quantidade Total (R$)"] = df_acoes["Valor Por Unidade"] * df_acoes["Quantidade"]
+        df_acoes["Expectativa de Recebimentos (R$)"] = df_acoes["Rendimento por Unidade"] * df_acoes["Quantidade"]
 
     if st.session_state.acoes:
         df_acoes = pd.DataFrame(st.session_state.acoes)
@@ -117,10 +125,17 @@ with aba1:
     else:
         st.info("➡️ Adicione Ações ou FII para ver os resultados.")
 
+
+
     if st.session_state.acoes:
-        df_acoes = pd.DataFrame(st.session_state.acoes)
-        df_acoes["Quantidade Total (R$)"] = df_acoes["Valor Por Unidade"] * df_acoes["Quantidade"]
-        df_acoes["Expectativa de Recebimentos (R$)"] = df_acoes["Rendimento por Unidade"] * df_acoes["Quantidade"]
+        st.subheader("❌ Remover Ação")
+        remover = st.selectbox("Selecione a ação para remover:", [r["NOME"] for r in st.session_state.acoes])
+
+        if st.button("Remover Ação"):
+            st.session_state.acoes = [r for r in st.session_state.acoes if r["NOME"] != remover]
+            st.warning(f"Ação {remover} removida!")
+
+
 
         # 📥 Download individual
         output = BytesIO()
@@ -298,6 +313,7 @@ with aba4:
         cotacao = st.number_input("Cotação Atual :", min_value=0.0, step=0.01)
         adicionar = st.form_submit_button("Adicionar/Atualizar")
 
+
     # Atualizar / Adicionar Moeda Estrangeira
     if adicionar and nome:
         nome = nome.upper()
@@ -316,6 +332,7 @@ with aba4:
             })
             st.success(f"Moeda {nome} adicionada!")
 
+
     # Remover Moeda Estrangeira
     if st.session_state.extern:
         st.subheader("❌ Remover Moeda")
@@ -323,6 +340,7 @@ with aba4:
         if st.button("Remover Moeda"):
             st.session_state.extern = [m for m in st.session_state.extern if m["Moeda"] != remover]
             st.warning(f"Moeda {remover} removida!")
+
 
     # Mostrar tabela e gráficos
     if st.session_state.extern:
@@ -378,104 +396,197 @@ if st.session_state.acoes or st.session_state.renda_fixa or st.session_state.cri
 
     )
 
+# ==============================
+# 🎨 Toggle de Tema
+# ==============================
+tema_escuro = st.toggle("🌙 Modo Escuro", value=False)
 
-# CSS customizado
-# 🎨 CSS Moderno e Clean
-st.markdown(
-    """
-    <style>
-    /* Fundo geral */
-    .stApp {
-        background-color: #f8fafc;
-        font-family: 'Segoe UI', 'Roboto', sans-serif;
-        color: #1e293b;
-    }
+if tema_escuro:
+    # 🌙 CSS Dark Refinado
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #0f172a;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            color: #f8fafc !important;
+        }
+        h1, h2, h3, h4, h5, h6, label, p, span, div {
+            color: #f8fafc !important;
+        }
 
-    /* Cabeçalhos */
-    h1, h2, h3 {
-        color: #0f172a;
-        font-weight: 600;
-        letter-spacing: -0.5px;
-    }
+        /* Botões principais */
+        .stButton button {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white !important;
+            border-radius: 14px;
+            padding: 10px 22px;
+            border: none;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(79,70,229,0.25);
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        .stButton button:hover {
+            background: linear-gradient(135deg, #4f46e5, #312e81);
+            box-shadow: 0 6px 14px rgba(79,70,229,0.4);
+            transform: translateY(-2px);
+        }
+        .stButton button:disabled {
+            background: #334155 !important;
+            color: #94a3b8 !important;
+            opacity: 0.7;
+            box-shadow: none;
+            transform: none;
+        }
 
-    /* Botões */
-    .stButton button {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: white;
-        border-radius: 14px;
-        padding: 10px 22px;
-        border: none;
-        font-weight: 500;
-        box-shadow: 0 4px 10px rgba(37,99,235,0.25);
-        transition: all 0.25s ease;
-    }
-    .stButton button:hover {
-        background: linear-gradient(135deg, #2563eb, #1e40af);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(30,64,175,0.35);
-    }
+        /* Download button */
+        .stDownloadButton > button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white !important;
+            border-radius: 14px;
+            border: none;
+            padding: 10px 22px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.25);
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        .stDownloadButton > button:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            box-shadow: 0 6px 16px rgba(16,185,129,0.4);
+            transform: translateY(-2px);
+        }
+        .stDownloadButton > button:disabled {
+            background: #334155 !important;
+            color: #94a3b8 !important;
+            opacity: 0.7;
+            box-shadow: none;
+        }
 
-    /* Inputs */
-    .stTextInput > div > div > input,
-    .stNumberInput input {
-        border-radius: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 10px;
-        background-color: #ffffff;
-        transition: border 0.2s ease;
-    }
-    .stTextInput > div > div > input:focus,
-    .stNumberInput input:focus {
-        border: 1px solid #3b82f6;
-        outline: none;
-    }
+        /* Inputs */
+        .stTextInput > div > div > input,
+        .stNumberInput input,
+        .stSelectbox div[data-baseweb="select"] {
+            border-radius: 10px;
+            border: 1px solid #334155;
+            padding: 8px;
+            background-color: #1e293b;
+            color: #f8fafc !important;
+            transition: all 0.2s ease;
+        }
+        .stTextInput > div > div > input:focus,
+        .stNumberInput input:focus,
+        .stSelectbox div[data-baseweb="select"]:focus {
+            border: 1px solid #6366f1;
+            box-shadow: 0 0 6px rgba(99,102,241,0.6);
+        }
 
-    /* Formulários como cards */
-    .stForm {
-        background: #ffffff;
-        padding: 22px;
-        border-radius: 18px;
-        box-shadow: 0 3px 12px rgba(0,0,0,0.06);
-        margin-bottom: 20px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .stForm:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    }
+        /* Uploader */
+        .stFileUploader {
+            background: #1e293b !important;
+            border-radius: 14px;
+            padding: 14px;
+            border: 2px dashed #475569;
+            color: #f1f5f9 !important;
+            transition: border 0.3s ease;
+        }
+        .stFileUploader div, .stFileUploader label {
+            color: #f1f5f9 !important;
+        }
+        .stFileUploader:hover {
+            border: 2px dashed #6366f1;
+        }
 
-    /* DataFrames */
-    .stDataFrame {
-        border-radius: 14px;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    }
+        /* Tabs */
+        .stTabs [data-baseweb="tab"] {
+            background-color: #1e293b;
+            border-radius: 12px 12px 0 0;
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #6366f1 !important;
+            color: white !important;
+        }
 
-    /* Abas */
-    .stTabs [data-baseweb="tab"] {
-        background-color: #e2e8f0;
-        border-radius: 12px 12px 0 0;
-        margin-right: 6px;
-        padding: 10px 18px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        background-color: #cbd5e1;
-        transform: translateY(-1px);
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #3b82f6 !important;
-        color: white !important;
-        font-weight: 600;
-        box-shadow: 0 -2px 6px rgba(59,130,246,0.4) inset;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+        /* Containers */
+        .stForm, .stDataFrame {
+            background: #1e293b;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+            color: #f8fafc;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # 📊 Tema escuro para gráficos
+    import matplotlib.pyplot as plt
+    plt.style.use("dark_background")
+
+else:
+    # ☀️ CSS Claro
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #f8fafc;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            color: #1e293b;
+        }
+        h1, h2, h3 {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        /* Botões */
+        .stButton button {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white !important;
+            border-radius: 14px;
+            padding: 10px 22px;
+            border: none;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(37,99,235,0.25);
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        .stButton button:hover {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            box-shadow: 0 6px 16px rgba(37,99,235,0.35);
+            transform: translateY(-2px);
+        }
+
+        /* Containers */
+        .stForm, .stDataFrame {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        /* Tabs */
+        .stTabs [data-baseweb="tab"] {
+            background-color: #e2e8f0;
+            border-radius: 12px 12px 0 0;
+            transition: all 0.2s ease;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #3b82f6 !important;
+            color: white !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # 📊 Tema claro para gráficos
+    import matplotlib.pyplot as plt
+    plt.style.use("default")
+
 
 # Rodapé
 st.markdown(
