@@ -353,21 +353,13 @@ with aba4:
             })
             st.success(f"Moeda {nome} adicionada!")
 
-    if st.session_state.acoes:
-        st.subheader("❌ Remover Ação")
-
-        with st.form("form_remover"):
-            remover = st.selectbox(
-                "Selecione a ação para remover:",
-                [r["NOME"] for r in st.session_state.acoes]
-            )
-            confirmar_remover = st.form_submit_button("Remover Ação")
-
-            if confirmar_remover and remover:
-                st.session_state.acoes = [
-                    r for r in st.session_state.acoes if r["NOME"] != remover
-                ]
-                st.warning(f"Ação {remover} removida!")
+   # Remover Moeda Estrangeira
+    if st.session_state.extern:
+        st.subheader("❌ Remover Moeda")
+        remover = st.selectbox("Selecione a moeda para remover:", [m["Moeda"] for m in st.session_state.extern])
+        if st.button("Remover Moeda"):
+            st.session_state.extern = [m for m in st.session_state.extern if m["Moeda"] != remover]
+            st.warning(f"Moeda {remover} removida!")
 
     # Mostrar tabela e gráficos
     if st.session_state.extern:
@@ -434,5 +426,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
