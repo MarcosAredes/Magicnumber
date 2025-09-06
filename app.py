@@ -148,15 +148,20 @@ with aba1:
 
 
 
-   if st.session_state.acoes:
+  if st.session_state.acoes:
     st.subheader("❌ Remover Ação")
 
     with st.form("form_remover"):
-        remover = st.selectbox("Selecione a ação para remover:", [r["NOME"] for r in st.session_state.acoes])
+        remover = st.selectbox(
+            "Selecione a ação para remover:",
+            [r["NOME"] for r in st.session_state.acoes]
+        )
         confirmar_remover = st.form_submit_button("Remover Ação")
 
         if confirmar_remover and remover:
-            st.session_state.acoes = [r for r in st.session_state.acoes if r["NOME"] != remover]
+            st.session_state.acoes = [
+                r for r in st.session_state.acoes if r["NOME"] != remover
+            ]
             st.warning(f"Ação {remover} removida!")
 
 
@@ -431,6 +436,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
