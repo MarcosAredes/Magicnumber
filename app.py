@@ -112,6 +112,13 @@ with aba1:
                     "Rendimento por Unidade": dividendo
                 })
                 st.success(f"Ação {nome} adicionada!")
+if st.session_state.acoes:
+    st.subheader("❌ Remover Ação")
+    nomes_acoes = [acao["NOME"] for acao in st.session_state.acoes]
+    acao_remover = st.selectbox("Selecione a ação para remover:", [""] + nomes_acoes)
+    if st.button("Remover Ação") and acao_remover:
+        st.session_state.acoes = [acao for acao in st.session_state.acoes if acao["NOME"] != acao_remover]
+        st.success(f"Ação {acao_remover} removida!")
 
     if st.session_state.acoes:
         df_acoes = pd.DataFrame(st.session_state.acoes)
@@ -145,17 +152,6 @@ with aba1:
         })
     else:
         st.info("➡️ Adicione Ações ou FII para ver os resultados.")
-
-
-
-    if st.session_state.acoes:
-        st.subheader("❌ Remover Ação")
-        remover = st.selectbox("Selecione a ação para remover:", [r["NOME"] for r in st.session_state.acoes])
-
-        if st.button("Remover Ação"):
-            st.session_state.acoes = [r for r in st.session_state.acoes if r["NOME"] != remover]
-            st.warning(f"Ação {remover} removida!")
-
 
 
         # 📥 Download individual
@@ -353,13 +349,15 @@ with aba4:
             })
             st.success(f"Moeda {nome} adicionada!")
 
-   # Remover Moeda Estrangeira
+
+    # Remover Moeda Estrangeira
     if st.session_state.extern:
         st.subheader("❌ Remover Moeda")
         remover = st.selectbox("Selecione a moeda para remover:", [m["Moeda"] for m in st.session_state.extern])
         if st.button("Remover Moeda"):
             st.session_state.extern = [m for m in st.session_state.extern if m["Moeda"] != remover]
             st.warning(f"Moeda {remover} removida!")
+
 
     # Mostrar tabela e gráficos
     if st.session_state.extern:
@@ -426,6 +424,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 
 
