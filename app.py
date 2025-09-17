@@ -160,6 +160,9 @@ with aba1:
 # ==============================
 # 🏦 Renda Fixa
 # ==============================
+# ==============================
+# 🏦 Renda Fixa
+# ==============================
 with aba2:
     st.header("🏦 Controle de Renda Fixa")
     if "renda_fixa" not in st.session_state:
@@ -168,7 +171,7 @@ with aba2:
     with st.form("form_renda_fixa"):
         nome = st.text_input("Nome do título (Tesouro, CDB, etc):")
         valor = st.number_input("Valor investido (R$):", min_value=0.01, step=0.01, format="%.2f")
-        taxa = st.number_input("Taxa de rendimento mensal (%):", min_value=0.00, step=0.01, format="%.2f")
+        taxa_anual = st.number_input("Taxa de rendimento anual (%):", min_value=0.00, step=0.01, format="%.2f")
         add_rf = st.form_submit_button("Adicionar / Atualizar")
 
     if add_rf and nome:
@@ -176,45 +179,47 @@ with aba2:
         existe = next((inv for inv in st.session_state.renda_fixa if inv["NOME"] == nome), None)
         if existe:
             existe["Valor Investido"] = valor
-            existe["Taxa (%)"] = taxa
-            st.success(f"Renda fixa {nome} atualizada!")
+            existe["Taxa Anual (%)"] = taxa_anual
         else:
             st.session_state.renda_fixa.append({
                 "NOME": nome,
                 "Valor Investido": valor,
-                "Taxa (%)": taxa
+                "Taxa Anual (%)": taxa_anual
             })
-            st.success(f"Renda fixa {nome} adicionada!")
+        st.success(f"Renda fixa {nome} registrada/atualizada!")
 
-    if st.session_state.renda_fixa:
-        st.subheader("❌ Remover Renda Fixa")
-        remover = st.selectbox("Selecione o título para remover:", [r["NOME"] for r in st.session_state.renda_fixa])
-        if st.button("Remover Renda Fixa"):
-            st.session_state.renda_fixa = [r for r in st.session_state.renda_fixa if r["NOME"] != remover]
-            st.warning(f"Renda Fixa {remover} removida!")
-
-    if st.session_state.renda_fixa:
+    if st.session_state.renda_fixa:  # só roda se houver dados
         df_rf = pd.DataFrame(st.session_state.renda_fixa)
-        df_rf["Rendimento Mensal (R$)"] = df_rf["Valor Investido"] * (df_rf["Taxa (%)"] / 100)
 
+        # Converter taxa anual para mensal
+        df_rf["Taxa Mensal (%)"] = ((1 + (df_rf["Taxa Anual (%)"] / 100)) ** (1 / 12) - 1) * 100
+
+        # Rendimentos
+        df_rf["Rendimento Mensal (R$)"] = df_rf["Valor Investido"] * (df_rf["Taxa Mensal (%)"] / 100)
+        df_rf["Rendimento Anual (R$)"] = df_rf["Valor Investido"] * (df_rf["Taxa Anual (%)"] / 100)
+
+        # Totais
         total_rf = df_rf["Valor Investido"].sum()
-        total_rend_rf = df_rf["Rendimento Mensal (R$)"].sum()
+        total_rend_mensal = df_rf["Rendimento Mensal (R$)"].sum()
+        total_rend_anual = df_rf["Rendimento Anual (R$)"].sum()
 
         st.subheader("📌 Resultado da Renda Fixa")
         st.dataframe(df_rf, use_container_width=True)
 
         st.subheader("📊 Totais Gerais")
         st.write(f"💵 **Total Investido em Renda Fixa:** R$ {total_rf:,.2f}")
-        st.write(f"📈 **Rendimento Mensal Total:** R$ {total_rend_rf:,.2f}")
+        st.write(f"📈 **Rendimento Mensal Total:** R$ {total_rend_mensal:,.2f}")
+        st.write(f"📆 **Rendimento Anual Total:** R$ {total_rend_anual:,.2f}")
 
         st.bar_chart({
             "Totais (R$)": {
                 "Investimento Total": total_rf,
-                "Rendimento Mensal": total_rend_rf
+                "Rendimento Mensal": total_rend_mensal,
+                "Rendimento Anual": total_rend_anual
             }
         })
 
-        # Download
+        # 🔽 Só gera Excel se houver dados
         output = BytesIO()
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
             df_rf.to_excel(writer, index=False, sheet_name="Renda Fixa")
@@ -226,6 +231,9 @@ with aba2:
             file_name="renda_fixa.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+    else:
+        st.info("➡️ Adicione Renda Fixa para ver os resultados.")
+
 
 # ==============================
 # 💰 Criptomoedas
